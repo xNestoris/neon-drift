@@ -83,6 +83,7 @@ h2 { font-size: 2em; color: var(--cyan); text-shadow: 0 0 0.4em rgba(62, 240, 25
   letter-spacing: 0.3em;
   margin-left: 0.3em;
 }
+.credit { font-family: var(--display); font-size: 0.9em; letter-spacing: 0.15em; color: var(--yellow); text-shadow: 0 0 0.4em rgba(255, 210, 62, 0.5); margin: 0; }
 .tagline { font-size: 1.2em; color: var(--muted); margin: 0.2em 0 0.8em; }
 .muted { color: var(--muted); font-size: 1em; margin: 0; }
 .hint { color: var(--muted); font-size: 0.9em; margin: 0; }
