@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Drift</title>
+<meta name="description" content="Neon Drift - a wave-survival arena shooter that runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" aria-label="Neon Drift game area"></canvas>
+
+  <div id="ui">
+    <section class="screen" id="screen-menu" hidden>
+      <h1 class="title">NEON<span>DRIFT</span></h1>
+      <p class="tagline">Survive the waves. Build your ship. Break the bosses.</p>
+      <div class="menu-buttons">
+        <button data-action="play" class="primary">Play <small id="menu-ship"></small></button>
+        <button data-action="ships">Ships</button>
+        <button data-action="scores">High scores</button>
+        <button data-action="settings">Settings</button>
+        <button data-action="howto">How to play</button>
+      </div>
+      <p class="muted" id="menu-best"></p>
+    </section>
+
+    <section class="screen" id="screen-ships" hidden>
+      <h2>Choose your ship</h2>
+      <div class="ship-grid" id="ship-grid"></div>
+      <div class="row"><button data-action="back" data-back>Back</button></div>
+    </section>
+
+    <section class="screen" id="screen-scores" hidden>
+      <h2>High scores</h2>
+      <div class="table-wrap"><table id="scores-table"></table></div>
+      <p class="muted" id="scores-stats"></p>
+      <div class="row"><button data-action="back" data-back>Back</button></div>
+    </section>
+
+    <section class="screen" id="screen-settings" hidden>
+      <h2>Settings</h2>
+      <div class="settings">
+        <label class="setting"><span>Volume</span><input type="range" id="set-volume" min="0" max="100" step="5"></label>
+        <label class="setting"><span>Music</span><input type="checkbox" id="set-music"></label>
+        <label class="setting"><span>Screen shake</span><input type="checkbox" id="set-shake"></label>
+        <label class="setting"><span>Auto-fire</span><input type="checkbox" id="set-autofire"></label>
+        <label class="setting"><span>Show FPS</span><input type="checkbox" id="set-fps"></label>
+      </div>
+      <div class="row" id="reset-row"><button data-action="reset" class="danger">Reset progress</button></div>
+      <div class="row" id="reset-confirm" hidden>
+        <span>Delete all scores and unlocks?</span>
+        <button data-action="reset-yes" class="danger">Yes, reset</button>
+        <button data-action="reset-no">Cancel</button>
+      </div>
+      <div class="row"><button data-action="back" data-back>Back</button></div>
+    </section>
+
+    <section class="screen" id="screen-howto" hidden>
+      <h2>How to play</h2>
+      <div class="table-wrap">
+        <table class="controls">
+          <tr><th></th><th>Keyboard &amp; mouse</th><th>Gamepad</th></tr>
+          <tr><td>Move</td><td>WASD / arrow keys</td><td>Left stick</td></tr>
+          <tr><td>Aim</td><td>Mouse</td><td>Right stick</td></tr>
+          <tr><td>Fire</td><td>Hold left click (or J)</td><td>Right stick / RT</td></tr>
+          <tr><td>Dash</td><td>Space / Shift / right click</td><td>A / bumpers</td></tr>
+          <tr><td>Pause</td><td>Esc / P</td><td>Start</td></tr>
+        </table>
+      </div>
+      <ul class="tips">
+        <li>Dashing makes you briefly invulnerable. Use it to slip through bullets.</li>
+        <li>Clear a wave to pick one of three upgrades. Every 5th wave is a boss.</li>
+        <li>Chain kills quickly to build your combo multiplier. Getting hit resets it.</li>
+        <li>Collect glowing shards for bonus score and green orbs to repair.</li>
+        <li>Clear waves 5, 8 and 12 to unlock new ships.</li>
+      </ul>
+      <div class="row"><button data-action="back" data-back>Back</button></div>
+    </section>
+
+    <section class="screen dim" id="screen-pause" hidden>
+      <h2>Paused</h2>
+      <div class="build" id="pause-build"></div>
+      <div class="menu-buttons">
+        <button data-action="resume" class="primary">Resume</button>
+        <button data-action="settings">Settings</button>
+        <button data-action="quit">Quit to menu</button>
+      </div>
+    </section>
+
+    <section class="screen dim" id="screen-upgrade" hidden>
+      <h2 id="upgrade-title">Wave cleared</h2>
+      <p class="muted" id="upgrade-sub">Choose an upgrade</p>
+      <div class="cards" id="upgrade-cards"></div>
+      <p class="hint">Click a card or press 1, 2 or 3</p>
+    </section>
+
+    <section class="screen dim" id="screen-gameover" hidden>
+      <h2 class="danger-text">Ship destroyed</h2>
+      <div class="stats" id="go-stats"></div>
+      <p class="highlight" id="go-rank"></p>
+      <p class="highlight" id="go-unlocks"></p>
+      <div class="menu-buttons">
+        <button data-action="retry" class="primary">Play again</button>
+        <button data-action="ships">Change ship</button>
+        <button data-action="menu">Main menu</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="src/util.js"></script>
+<script src="src/save.js"></script>
+<script src="src/input.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/fx.js"></script>
+<script src="src/entities.js"></script>
+<script src="src/upgrades.js"></script>
+<script src="src/waves.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/render.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>

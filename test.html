@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Neon Drift - smoke test</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Loads the real game, then drives it headlessly with a bot through several waves,
+     a boss fight, upgrade picks and a death. Open in a browser or run headless and
+     read the #result element. -->
+<div id="stage"><canvas id="game"></canvas><div id="ui"></div></div>
+<pre id="result">running</pre>
+<script>
+  window.__errors = [];
+  window.addEventListener('error', e => window.__errors.push(String(e.message) + ' @' + e.filename + ':' + e.lineno));
+</script>
+<script>
+  // Pull the real menu markup from index.html is not possible from file://, so build the
+  // minimum DOM ui.js needs.
+  const ids = ['menu-ship', 'menu-best', 'ship-grid', 'scores-table', 'scores-stats', 'pause-build', 'upgrade-title', 'upgrade-sub', 'upgrade-cards', 'go-stats', 'go-rank', 'go-unlocks', 'reset-row', 'reset-confirm'];
+  const ui = document.getElementById('ui');
+  for (const s of ['menu', 'ships', 'scores', 'settings', 'howto', 'pause', 'upgrade', 'gameover']) {
+    const sec = document.createElement('section');
+    sec.className = 'screen';
+    sec.id = 'screen-' + s;
+    sec.hidden = true;
+    ui.appendChild(sec);
+  }
+  for (const id of ids) {
+    const d = document.createElement('div');
+    d.id = id;
+    document.getElementById('screen-menu').appendChild(d);
+  }
+  for (const [id, type] of [['set-volume', 'range'], ['set-music', 'checkbox'], ['set-shake', 'checkbox'], ['set-autofire', 'checkbox'], ['set-fps', 'checkbox']]) {
+    const i = document.createElement('input');
+    i.id = id;
+    i.type = type;
+    document.getElementById('screen-settings').appendChild(i);
+  }
+</script>
+<script src="src/util.js"></script>
+<script src="src/save.js"></script>
+<script src="src/input.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/fx.js"></script>
+<script src="src/entities.js"></script>
+<script src="src/upgrades.js"></script>
+<script src="src/waves.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/render.js"></script>
+<script src="src/game.js"></script>
+<script>
+  (function run() {
+    const out = { errors: window.__errors, log: [] };
+    try {
+      localStorage.clear();
+      const D = ND.game.debug, G = D.G;
+      const ctx = document.getElementById('game').getContext('2d');
+      D.startRun();
+      G.player.maxHp = G.player.hp = 1e9;
+      G.player.damage *= 3; // keep the test fast
+      ND.input.mouse.down = true;
+      let steps = 0, bossesSeen = 0, upgrades = 0, maxEnemies = 0;
+      const seenTypes = new Set();
+      while (G.waveNum < 11 && steps < 60 * 60 * 25) {
+        const t = G.enemies.find(e => !e.entering) || G.enemies[0];
+        if (t) {
+          ND.input.mouse.x = t.x;
+          ND.input.mouse.y = t.y;
+        }
+        // Wander so the bot collects orbs and dodges a bit.
+        if (steps % 90 === 0) G.player.x = 300 + Math.random() * 680, G.player.y = 200 + Math.random() * 320;
+        if (G.state === 'upgrade') {
+          D.chooseUpgrade(steps % 3 < G.choices.length ? steps % 3 : 0);
+          upgrades++;
+        }
+        if (G.boss && !G.__bossCounted) { bossesSeen++; G.__bossCounted = true; }
+        if (!G.boss) G.__bossCounted = false;
+        for (const e of G.enemies) seenTypes.add(e.type);
+        maxEnemies = Math.max(maxEnemies, G.enemies.length);
+        D.update(D.STEP);
+        if (steps % 120 === 0) ND.render.frame(ctx, G, 60);
+        steps++;
+        if (window.__errors.length) break;
+      }
+      out.log.push(`reached wave ${G.waveNum} after ${(steps / 60).toFixed(0)}s simulated, state=${G.state}`);
+      out.log.push(`bosses fought ${bossesSeen}, upgrades taken ${upgrades}, peak enemies ${maxEnemies}, kills ${G.kills}, score ${G.score}`);
+      out.log.push('enemy types seen: ' + [...seenTypes].sort().join(','));
+      out.log.push('build: ' + JSON.stringify(G.taken));
+
+      // Pause / resume.
+      G.state === 'playing' || (G.state = 'playing');
+      document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+      D.update(D.STEP);
+      out.log.push('after Esc: state=' + G.state + ' screen=' + ND.ui.current);
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape' }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' }));
+      D.update(D.STEP);
+      out.log.push('after 2nd Esc: state=' + G.state);
+
+      // Death -> game over -> save.
+      G.player.hp = 5;
+      G.player.shield = 0;
+      G.player.invuln = 0;
+      G.player.dashTime = 0;
+      D.hurtPlayer(50);
+      for (let i = 0; i < 200; i++) D.update(D.STEP);
+      ND.render.frame(ctx, G, 60);
+      out.log.push('after death: state=' + G.state + ' screen=' + ND.ui.current);
+      out.log.push('save: ' + JSON.stringify({ runs: ND.save.data.runs, bestCleared: ND.save.data.bestCleared, top: ND.save.data.highScores[0] }));
+      out.log.push('unlocked: ' + Object.keys(ND.SHIPS).filter(ND.save.isUnlocked).join(','));
+
+      // Every ship can start a run.
+      for (const id of Object.keys(ND.SHIPS)) {
+        ND.save.data.selectedShip = id;
+        D.startRun();
+        for (let i = 0; i < 300; i++) D.update(D.STEP);
+        ND.render.frame(ctx, G, 60);
+      }
+      out.log.push('all ships started OK, last=' + G.player.ship);
+      localStorage.clear();
+    } catch (e) {
+      out.errors.push('EXCEPTION ' + e.message + '\n' + e.stack);
+    }
+    out.ok = out.errors.length === 0;
+    document.getElementById('result').textContent = JSON.stringify(out, null, 1);
+  })();
+</script>
+</body>
+</html>
