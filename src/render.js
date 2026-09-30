@@ -147,20 +147,33 @@ ND.render = (() => {
 
   function drawPlayer(ctx, p, G) {
     if (p.invuln > 0 && p.dashTime <= 0 && Math.floor(G.time * 20) % 2 === 0) return;
+    const color = p.dashTime > 0 ? '#ffffff' : p.color;
+    // The ship is the word "YUV", kept upright so it stays readable; a small
+    // pointer orbits it to show the aim direction.
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.angle);
     ctx.beginPath();
-    ctx.moveTo(18, 0);
-    ctx.lineTo(-12, -12);
-    ctx.lineTo(-6, 0);
-    ctx.lineTo(-12, 12);
+    ctx.moveTo(44, 0);
+    ctx.lineTo(35, -6);
+    ctx.lineTo(35, 6);
     ctx.closePath();
-    glow(ctx, p.dashTime > 0 ? '#ffffff' : p.color, 2, 0.25);
+    glow(ctx, color, 1.5, 0.6);
     ctx.restore();
+    ctx.font = `900 20px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 7;
+    ctx.strokeText('YUV', p.x, p.y + 1);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.fillText('YUV', p.x, p.y + 1);
     if (p.shield > 0) {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r + 10, 0, TAU);
+      ctx.arc(p.x, p.y, 32, 0, TAU);
       glow(ctx, '#3ef0ff', 1.5, 0.05 * p.shield);
     }
     for (let i = 0; i < p.orbitals; i++) {

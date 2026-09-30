@@ -68,7 +68,7 @@ ND.ui = (() => {
             .map(([label, v]) => `<div class="bar"><span>${label}</span><i style="--v:${Math.min(1, v).toFixed(2)}"></i></div>`)
             .join('');
           return `<button class="ship-card${sel ? ' selected' : ''}" data-ship="${id}" ${unlocked ? '' : 'disabled'} style="--c:${s.color}">
-            <svg viewBox="-20 -20 40 40" aria-hidden="true"><path d="M16 0 L-11 -11 L-6 0 L-11 11 Z" /></svg>
+            <span class="yuv" aria-hidden="true">YUV</span>
             <strong>${esc(s.name)}</strong>
             <em>${unlocked ? esc(s.desc) : 'Locked: ' + esc(s.unlock.text)}</em>
             ${unlocked ? bars : ''}
